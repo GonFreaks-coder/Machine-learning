@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f2ec">
+    <title>Mood Mirror — a tiny read on your expression</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #202b38;
+            --muted: #78818b;
+            --paper: #f5f2ec;
+            --card: #fffefa;
+            --line: #e9e5dd;
+            --lavender: #e9e4ff;
+            --purple: #6654c7;
+            --coral: #e99b83;
+            --green: #6f9c82;
+            font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--ink);
+            background:
+                radial-gradient(ellipse at 86% 12%, rgba(233, 228, 255, 0.7), transparent 28rem),
+                var(--paper);
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .page-shell {
+            width: min(1120px, calc(100% - 48px));
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 88px;
+            border-bottom: 1px solid rgba(32, 43, 56, 0.09);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-size: 15px;
+            font-weight: 750;
+            letter-spacing: -0.03em;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border-radius: 12px;
+            color: var(--purple);
+            background: var(--lavender);
+        }
+
+        .brand-mark svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .top-note {
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.04em;
+        }
+
+        main {
+            padding: 62px 0 42px;
+        }
+
+        .intro {
+            max-width: 660px;
+            margin: 0 auto 38px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            color: var(--purple);
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--coral);
+            content: "";
+        }
+
+        h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(40px, 6vw, 65px);
+            font-weight: 500;
+            letter-spacing: -0.055em;
+            line-height: 1.04;
+        }
+
+        h1 em {
+            color: var(--purple);
+            font-weight: 500;
+        }
+
+        .intro p {
+            max-width: 450px;
+            margin: 17px auto 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.65;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1.13fr) minmax(300px, 0.87fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .card {
+            overflow: hidden;
+            border: 1px solid rgba(32, 43, 56, 0.07);
+            border-radius: 22px;
+            background: var(--card);
+            box-shadow: 0 14px 40px rgba(48, 47, 67, 0.055);
+        }
+
+        .camera-card {
+            padding: 18px;
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 34px;
+            margin: 0 2px 14px;
+        }
+
+        .card-heading h2 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 9px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #c4c6c8;
+        }
+
+        .live-badge[data-live="true"] {
+            border-color: #d7e8dc;
+            color: #568168;
+            background: #f2f8f3;
+        }
+
+        .live-badge[data-live="true"] .live-dot {
+            background: var(--green);
+            box-shadow: 0 0 0 3px rgba(111, 156, 130, 0.14);
+        }
+
+        .camera-stage {
+            position: relative;
+            display: grid;
+            overflow: hidden;
+            min-height: 330px;
+            aspect-ratio: 1.32;
+            place-items: center;
+            border-radius: 15px;
+            background:
+                radial-gradient(ellipse at 50% 40%, rgba(233, 228, 255, 0.78), transparent 52%),
+                #efedf0;
+        }
+
+        .camera-stage canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+        }
+
+        .camera-placeholder {
+            display: flex;
+            max-width: 255px;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .face-icon {
+            display: grid;
+            width: 76px;
+            height: 76px;
+            margin-bottom: 17px;
+            place-items: center;
+            border: 1px solid rgba(102, 84, 199, 0.12);
+            border-radius: 50%;
+            color: var(--purple);
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        .face-icon svg {
+            width: 35px;
+            height: 35px;
+        }
+
+        .camera-placeholder strong {
+            margin-bottom: 6px;
+            color: var(--ink);
+            font-size: 14px;
+        }
+
+        .camera-placeholder span {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .camera-corners {
+            position: absolute;
+            inset: 14px;
+            pointer-events: none;
+        }
+
+        .camera-corners::before,
+        .camera-corners::after {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-color: rgba(255, 255, 255, 0.88);
+            border-style: solid;
+            content: "";
+        }
+
+        .camera-corners::before {
+            top: 0;
+            left: 0;
+            border-width: 2px 0 0 2px;
+            border-radius: 5px 0 0;
+        }
+
+        .camera-corners::after {
+            right: 0;
+            bottom: 0;
+            border-width: 0 2px 2px 0;
+            border-radius: 0 0 5px;
+        }
+
+        .camera-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 2px 1px;
+        }
+
+        .camera-hint {
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .action-button {
+            display: inline-flex;
+            min-height: 43px;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 0 17px;
+            border: 0;
+            border-radius: 12px;
+            color: #fff;
+            background: var(--ink);
+            box-shadow: 0 5px 12px rgba(32, 43, 56, 0.12);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+
+        .action-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            background: var(--purple);
+            box-shadow: 0 8px 18px rgba(102, 84, 199, 0.2);
+        }
+
+        .action-button:focus-visible {
+            outline: 3px solid rgba(102, 84, 199, 0.3);
+            outline-offset: 3px;
+        }
+
+        .action-button:disabled {
+            cursor: wait;
+            opacity: 0.72;
+        }
+
+        .action-button svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .result-card {
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        .result-card .card-heading {
+            margin: 0 0 27px;
+        }
+
+        .result-card .card-heading span {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .result-summary {
+            display: flex;
+            min-height: 158px;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f1edff, #f8f3f0);
+        }
+
+        .summary-label {
+            margin-bottom: 8px;
+            color: var(--purple);
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        .result-summary strong {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(27px, 3vw, 36px);
+            font-weight: 500;
+            letter-spacing: -0.04em;
+            line-height: 1.12;
+        }
+
+        .result-summary p {
+            margin: 9px 0 0;
+            color: #777986;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .confidence-title {
+            display: flex;
+            justify-content: space-between;
+            margin: 25px 0 13px;
+            color: var(--muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .prediction-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .prediction-row {
+            display: grid;
+            gap: 8px;
+        }
+
+        .prediction-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--ink);
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .prediction-meta span:last-child {
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .meter {
+            overflow: hidden;
+            height: 6px;
+            border-radius: 99px;
+            background: #eeece8;
+        }
+
+        .meter-fill {
+            width: 0;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #998be5, var(--purple));
+            transition: width 350ms ease;
+        }
+
+        .prediction-row:nth-child(even) .meter-fill {
+            background: linear-gradient(90deg, #f0b5a2, var(--coral));
+        }
+
+        .privacy-note {
+            display: flex;
+            gap: 9px;
+            margin-top: auto;
+            padding-top: 23px;
+            color: var(--muted);
+            font-size: 10px;
+            line-height: 1.5;
+        }
+
+        .privacy-note svg {
+            width: 14px;
+            height: 14px;
+            flex: 0 0 auto;
+            color: var(--green);
+        }
+
+        .message {
+            min-height: 17px;
+            margin: 8px 0 0 2px;
+            color: #a44f45;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            padding: 29px 0 32px;
+            color: #96999e;
+            font-size: 10px;
+            letter-spacing: 0.04em;
+        }
+
+        @media (max-width: 760px) {
+            .page-shell {
+                width: min(560px, calc(100% - 32px));
+            }
+
+            .topbar {
+                min-height: 70px;
+            }
+
+            main {
+                padding-top: 43px;
+            }
+
+            .intro {
+                margin-bottom: 27px;
+            }
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-stage {
+                min-height: 280px;
+                aspect-ratio: 1.2;
+            }
+
+            .result-card {
+                min-height: 390px;
+            }
+
+            .result-card .card-heading {
+                margin-bottom: 18px;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .page-shell {
+                width: calc(100% - 24px);
+            }
+
+            .top-note {
+                max-width: 125px;
+                text-align: right;
+            }
+
+            .camera-card,
+            .result-card {
+                padding: 15px;
+            }
+
+            .camera-stage {
+                min-height: 240px;
+            }
+
+            .camera-controls {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .action-button {
+                width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z"/>
+                        <path d="M8.8 11.5h.01M15.2 11.5h.01M9.5 14.5c1.5 1.3 3.5 1.3 5 0"/>
+                    </svg>
+                </span>
+                Mood Mirror
+            </div>
+            <div class="top-note">A little read on your expression</div>
+        </header>
+
+        <main>
+            <section class="intro" aria-labelledby="page-title">
+                <div class="eyebrow">Your expression, in the moment</div>
+                <h1 id="page-title">How are you <em>feeling?</em></h1>
+                <p>A small experiment in reading the room. Turn on your camera and see what your expression says.</p>
+            </section>
+
+            <section class="workspace" aria-label="Expression classifier">
+                <article class="card camera-card">
+                    <div class="card-heading">
+                        <h2>Camera preview</h2>
+                        <span class="live-badge" id="live-badge" data-live="false">
+                            <span class="live-dot" aria-hidden="true"></span>
+                            <span id="live-text">Camera off</span>
+                        </span>
+                    </div>
+
+                    <div class="camera-stage" id="webcam-container">
+                        <div class="camera-placeholder" id="camera-placeholder">
+                            <div class="face-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="M9 10h.01M15 10h.01M8.8 14.3c1.8-1.6 4.6-1.6 6.4 0"/>
+                                </svg>
+                            </div>
+                            <strong>Your camera moment</strong>
+                            <span>When you’re ready, start the camera to see the model at work.</span>
+                        </div>
+                        <span class="camera-corners" aria-hidden="true"></span>
+                    </div>
+
+                    <div class="camera-controls">
+                        <span class="camera-hint">Find a little light and face the camera.</span>
+                        <button class="action-button" id="camera-button" type="button" onclick="toggleCamera()">
+                            <svg id="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9"/>
+                                <path d="m14 8 7-3v14l-7-3V8Z"/>
+                            </svg>
+                            <span id="button-label">Start camera</span>
+                        </button>
+                    </div>
+                    <p class="message" id="message" role="status" aria-live="polite"></p>
+                </article>
+
+                <article class="card result-card" aria-label="Model results">
+                    <div class="card-heading">
+                        <h2>What the model sees</h2>
+                        <span>Live estimate</span>
+                    </div>
+
+                    <div class="result-summary" aria-live="polite">
+                        <span class="summary-label">Current read</span>
+                        <strong id="top-prediction">Waiting for a face</strong>
+                        <p id="result-caption">Your result will appear here once the camera is on.</p>
+                    </div>
+
+                    <div class="confidence-title">
+                        <span>Expression match</span>
+                        <span>Confidence</span>
+                    </div>
+                    <div class="prediction-list" id="label-container" aria-label="Confidence by expression">
+                        <div class="prediction-row">
+                            <div class="prediction-meta"><span>Happy face</span><span>—</span></div>
+                            <div class="meter"><div class="meter-fill"></div></div>
+                        </div>
+                        <div class="prediction-row">
+                            <div class="prediction-meta"><span>Sad face</span><span>—</span></div>
+                            <div class="meter"><div class="meter-fill"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="privacy-note">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                        <span>Your camera is used only for this live demo. Nothing is recorded or uploaded by this page.</span>
+                    </div>
+                </article>
+            </section>
+        </main>
+
+        <footer>A small machine-learning experiment · Take the results lightly</footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script>
+        const MODEL_URL = "./my_model/";
+        const CAMERA_WIDTH = 480;
+        const CAMERA_HEIGHT = 360;
+
+        let model;
+        let webcam;
+        let animationFrame;
+        let isStarting = false;
+        let isRunning = false;
+
+        const cameraButton = document.getElementById("camera-button");
+        const buttonLabel = document.getElementById("button-label");
+        const buttonIcon = document.getElementById("button-icon");
+        const cameraContainer = document.getElementById("webcam-container");
+        const cameraPlaceholder = document.getElementById("camera-placeholder");
+        const liveBadge = document.getElementById("live-badge");
+        const liveText = document.getElementById("live-text");
+        const message = document.getElementById("message");
+        const topPrediction = document.getElementById("top-prediction");
+        const resultCaption = document.getElementById("result-caption");
+        const labelContainer = document.getElementById("label-container");
+
+        async function toggleCamera() {
+            if (isStarting) return;
+            if (isRunning) {
+                stopCamera();
+                return;
+            }
+            await startCamera();
+        }
+
+        async function startCamera() {
+            isStarting = true;
+            cameraButton.disabled = true;
+            buttonLabel.textContent = "Starting camera…";
+            message.textContent = "";
+
+            try {
+                if (!model) {
+                    model = await tmImage.load(
+                        MODEL_URL + "model.json",
+                        MODEL_URL + "metadata.json"
+                    );
+                    createPredictionRows(model.getTotalClasses());
+                }
+
+                webcam = new tmImage.Webcam(CAMERA_WIDTH, CAMERA_HEIGHT, true);
+                await webcam.setup();
+                await webcam.play();
+                cameraContainer.prepend(webcam.canvas);
+                cameraPlaceholder.hidden = true;
+                isRunning = true;
+                liveBadge.dataset.live = "true";
+                liveText.textContent = "Camera on";
+                buttonLabel.textContent = "Stop camera";
+                buttonIcon.innerHTML = '<path d="M8 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/><path d="M16 5h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"/><path d="M9 9h6v6H9z"/>';
+                animationFrame = window.requestAnimationFrame(loop);
+            } catch (error) {
+                if (webcam) {
+                    webcam.stop();
+                    webcam = null;
+                }
+                message.textContent = error && error.name === "NotAllowedError"
+                    ? "Camera access was blocked. Allow camera access in your browser settings and try again."
+                    : "The camera or model could not start. Check your camera connection and try again.";
+                buttonLabel.textContent = "Try again";
+                console.error("Unable to start the expression classifier:", error);
+            } finally {
+                isStarting = false;
+                cameraButton.disabled = false;
+            }
+        }
+
+        function stopCamera() {
+            isRunning = false;
+            window.cancelAnimationFrame(animationFrame);
+            if (webcam) {
+                webcam.stop();
+                webcam.canvas.remove();
+                webcam = null;
+            }
+            cameraPlaceholder.hidden = false;
+            liveBadge.dataset.live = "false";
+            liveText.textContent = "Camera off";
+            buttonLabel.textContent = "Start camera";
+            buttonIcon.innerHTML = '<path d="M14 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9"/><path d="m14 8 7-3v14l-7-3V8Z"/>';
+            topPrediction.textContent = "Waiting for a face";
+            resultCaption.textContent = "Your result will appear here once the camera is on.";
+            resetPredictionRows();
+        }
+
+        async function loop() {
+            if (!isRunning || !webcam) return;
+            webcam.update();
+            try {
+                await predict();
+                if (isRunning) animationFrame = window.requestAnimationFrame(loop);
+            } catch (error) {
+                console.error("Unable to analyze the current camera frame:", error);
+                message.textContent = "The model could not analyze this frame. Stop and restart the camera to try again.";
+                stopCamera();
+            }
+        }
+
+        async function predict() {
+            const predictions = await model.predict(webcam.canvas);
+            let highest = predictions[0];
+
+            predictions.forEach((prediction, index) => {
+                if (prediction.probability > highest.probability) highest = prediction;
+                const row = labelContainer.children[index];
+                if (!row) return;
+                const percentage = Math.round(prediction.probability * 100);
+                row.querySelector(".prediction-meta span:first-child").textContent = prediction.className.trim();
+                row.querySelector(".prediction-meta span:last-child").textContent = percentage + "%";
+                row.querySelector(".meter-fill").style.width = percentage + "%";
+            });
+
+            topPrediction.textContent = highest.className.trim();
+            resultCaption.textContent = Math.round(highest.probability * 100) + "% model confidence · Just one possible read.";
+        }
+
+        function createPredictionRows(count) {
+            labelContainer.replaceChildren();
+            for (let index = 0; index < count; index++) {
+                const row = document.createElement("div");
+                row.className = "prediction-row";
+                row.innerHTML = '<div class="prediction-meta"><span></span><span>0%</span></div><div class="meter"><div class="meter-fill"></div></div>';
+                labelContainer.appendChild(row);
+            }
+        }
+
+        function resetPredictionRows() {
+            for (const row of labelContainer.children) {
+                row.querySelector(".prediction-meta span:last-child").textContent = "—";
+                row.querySelector(".meter-fill").style.width = "0";
+            }
+        }
+    </script>
+</body>
+</html>
